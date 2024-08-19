@@ -1,23 +1,25 @@
-import { ApiError } from "../utils/ApiError";
-import asyncHandler from "../utils/asyncHandler";
+import { ApiError } from "../utils/ApiError.js";
+import asyncHandler from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
-import { User } from "../models/user.model";
+import { User } from "../models/user.model.js";
 
-export const verifyJWT = asyncHandler(async (req, res, next) => {
+export const verifyJWT = asyncHandler(async (req, _, next) => {
   try {
     const token =
-      req.cookies?.accessToken ||
+      req.cookies?.accessToken || //take the token which was generated when user logged in
       req.header("Authorization")?.replace("Bearer ", "");
 
-    if (!verifyJWT) {
+    if (!token) {
       throw new ApiError(401, "Unauthorized request");
     }
 
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    // decoe and verify that token
 
     const user = await User.findById(decodedToken?._id).select(
       "-password -refreshToken"
     );
+    // then we find that user that was logged in by decodedToken._id and store it in user(so we can logout that)
 
     if (!user) {
       throw new ApiError(401, "Invalid access token");
